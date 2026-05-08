@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Real-Time ISS and News Intelligence Dashboard — live ISS tracking, breaking news, and AI chatbot." />
+  <title>Mission Control Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+  <div id="toast-container" aria-live="polite"></div>
+
+  <header id="app-header">
+    <div id="header-brand">
+      <span id="header-label">MISSION CONTROL DASHBOARD</span>
+      <h1 id="header-title">Real-Time ISS and News Intelligence</h1>
+    </div>
+    <div id="header-controls">
+      <button id="theme-toggle">Switch to Dark</button>
+    </div>
+  </header>
+
+  <main id="app-main">
+    <!-- LEFT COLUMN -->
+    <div id="left-col">
+
+      <!-- ISS Section -->
+      <section id="iss-section" class="card">
+        <div class="section-header">
+          <h2 class="section-title">ISS Live Tracking</h2>
+          <div class="section-actions">
+            <button id="iss-refresh-btn" class="btn-outline">Refresh Now</button>
+            <button id="iss-auto-btn" class="btn-outline active">Auto-Refresh: ON</button>
+          </div>
+        </div>
+
+        <div id="iss-stats-grid">
+          <div class="stat-card">
+            <span class="stat-label">Latitude / Longitude</span>
+            <span class="stat-value" id="iss-coords">---, ---</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Speed</span>
+            <span class="stat-value" id="iss-speed">--- km/h</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Nearest Place</span>
+            <span class="stat-value" id="iss-location">Fetching…</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-label">Tracked Positions</span>
+            <span class="stat-value" id="iss-tracked">0</span>
+          </div>
+        </div>
+
+        <div id="iss-map"></div>
+
+        <div id="people-section">
+          <div class="section-header" style="margin-bottom:0.5rem">
+            <h3 class="subsection-title">People in Space Right Now</h3>
+            <span id="people-count" class="badge">…</span>
+          </div>
+          <div id="people-list" class="people-list"></div>
+        </div>
+      </section>
+
+      <!-- News Section -->
+      <section id="news-section" class="card">
+        <div class="section-header">
+          <h2 class="section-title">Breaking News</h2>
+          <button id="news-refresh-btn" class="btn-outline">Refresh</button>
+        </div>
+
+        <div id="news-controls">
+          <input id="news-search" type="search" placeholder="Search title, source, author…" autocomplete="off" />
+          <select id="news-sort">
+            <option value="date">Sort by Date</option>
+            <option value="source">Sort by Source</option>
+          </select>
+        </div>
+
+        <div id="news-tabs">
+          <button class="news-tab active" data-cat="breaking">Breaking</button>
+          <button class="news-tab" data-cat="technology">Technology</button>
+          <button class="news-tab" data-cat="science">Science</button>
+          <button class="news-tab" data-cat="business">Business</button>
+          <button class="news-tab" data-cat="health">Health</button>
+        </div>
+
+        <div id="news-list"></div>
+      </section>
+    </div><!-- /left-col -->
+
+    <!-- RIGHT COLUMN -->
+    <div id="right-col">
+      <section id="speed-chart-section" class="card">
+        <h2 class="section-title">ISS Speed Trend</h2>
+        <div id="speed-chart-wrap">
+          <canvas id="speed-chart"></canvas>
+        </div>
+      </section>
+
+      <section id="news-chart-section" class="card">
+        <h2 class="section-title">News by Category</h2>
+        <div id="news-chart-wrap">
+          <canvas id="news-chart"></canvas>
+        </div>
+      </section>
+    </div><!-- /right-col -->
+  </main>
+
+  <!-- Chatbot FAB -->
+  <button id="chatbot-fab" aria-label="Open AI Assistant">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    </svg>
+  </button>
+
+  <!-- Chatbot Panel -->
+  <div id="chatbot-panel" class="chatbot-hidden">
+    <div id="chatbot-header">
+      <span id="chatbot-title">AI Assistant</span>
+      <div id="chatbot-header-actions">
+        <button id="chatbot-clear-btn" class="btn-outline small">Clear</button>
+        <button id="chatbot-close-btn" aria-label="Close">✕</button>
+      </div>
+    </div>
+    <div id="chatbot-messages"></div>
+    <div id="chatbot-typing" class="hidden">
+      <span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>
+    </div>
+    <div id="chatbot-footer">
+      <input id="chatbot-input" type="text" placeholder="Ask from dashboard data only" maxlength="400" />
+      <button id="chatbot-send-btn">Send</button>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
