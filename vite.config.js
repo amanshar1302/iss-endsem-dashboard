@@ -28,6 +28,16 @@ export default defineConfig({
             proxyReq.setHeader('User-Agent', 'MissionControlDashboard/1.0')
           })
         }
+      },
+      '/hf-router': {
+        target: 'https://router.huggingface.co',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/hf-router/, '')
+      },
+      '/iss-fallback': {
+        target: 'https://api.wheretheiss.at',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/iss-fallback/, '')
       }
     }
   }

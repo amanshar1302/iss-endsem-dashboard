@@ -2,10 +2,10 @@
 import { showToast } from './toast.js';
 import { updateSpeedChart } from './charts.js';
 
-const ISS_API = '/issapi/iss-now.json';
-const ISS_API_FALLBACK = 'https://api.wheretheiss.at/v1/satellites/25544';
-const ASTROS_API = '/issapi/astros.json';
-const NOMINATIM = '/nominatim?format=json';
+const ISS_API = 'https://api.wheretheiss.at/v1/satellites/25544';
+const ISS_API_FALLBACK = 'https://api.open-notify.org/iss-now.json'; // Note: May fail on HTTPS due to mixed content
+const ASTROS_API = 'https://api.open-notify.org/astros.json';
+const NOMINATIM = 'https://nominatim.openstreetmap.org/reverse?format=json';
 
 const TRAIL_MAX = 15;
 const POLL_INTERVAL = 15000;
@@ -65,22 +65,24 @@ async function getLocationName(lat, lon) {
 // ── Fetch ISS position ─────────────────────────────────────
 async function fetchISS() {
   try {
+    // Try WhereTheISS (now primary)
     const r = await fetch(ISS_API);
     if (!r.ok) throw new Error('Primary API fail');
     const data = await r.json();
     return {
-      lat: parseFloat(data.iss_position.latitude),
-      lon: parseFloat(data.iss_position.longitude),
+      lat: parseFloat(data.latitude),
+      lon: parseFloat(data.longitude),
       timestamp: data.timestamp * 1000
     };
   } catch (err) {
     console.warn('Primary ISS API failed, trying fallback...', err);
+    // Fallback to OpenNotify
     const r = await fetch(ISS_API_FALLBACK);
     if (!r.ok) throw new Error('Both ISS APIs failed');
     const data = await r.json();
     return {
-      lat: parseFloat(data.latitude),
-      lon: parseFloat(data.longitude),
+      lat: parseFloat(data.iss_position.latitude),
+      lon: parseFloat(data.iss_position.longitude),
       timestamp: data.timestamp * 1000
     };
   }

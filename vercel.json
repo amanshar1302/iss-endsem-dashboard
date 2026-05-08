@@ -1,0 +1,24 @@
+{
+  "rewrites": [
+    {
+      "source": "/newsapi/:path*",
+      "destination": "https://newsapi.org/:path*"
+    },
+    {
+      "source": "/issapi/:path*",
+      "destination": "http://api.open-notify.org/:path*"
+    },
+    {
+      "source": "/nominatim",
+      "destination": "https://nominatim.openstreetmap.org/reverse"
+    },
+    {
+      "source": "/hf-router/:path*",
+      "destination": "https://router.huggingface.co/:path*"
+    },
+    {
+      "source": "/iss-fallback/:path*",
+      "destination": "https://api.wheretheiss.at/:path*"
+    }
+  ]
+}

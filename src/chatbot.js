@@ -1,6 +1,7 @@
 // chatbot.js — AI Chatbot using HF Mistral-7B-Instruct
 import { showToast } from './toast.js';
 import { getNewsSummary } from './news.js';
+import { updateStatus } from './main.js';
 
 const HF_TOKEN = import.meta.env.VITE_HF_TOKEN;
 const HF_MODEL = 'google/gemma-3-27b-it';
@@ -52,6 +53,10 @@ function buildPrompt(userText) {
 
 // ── Call HF Inference API ──────────────────────────────────
 async function callHF(userText) {
+  if (!HF_TOKEN) {
+    throw new Error('Hugging Face Token is missing! Please add VITE_HF_TOKEN to your .env file.');
+  }
+
   const ctx = buildContext();
   const history = messages.slice(-10).map(m => ({
     role: m.role === 'user' ? 'user' : 'assistant',
@@ -113,6 +118,33 @@ function setTyping(on) {
   if (btn) btn.disabled = on;
 }
 
+// ── Predictable Fallbacks (Offline Mode) ───────────────────
+function getFallbackResponse(userText) {
+  const text = userText.toLowerCase();
+  const iss = window.__issData || {};
+  const newsSum = getNewsSummary();
+
+  if (text.includes('where') || text.includes('location') || text.includes('position') || text.includes('coord')) {
+    return `The International Space Station is currently at Latitude ${iss.lat?.toFixed(3) ?? 'N/A'} and Longitude ${iss.lon?.toFixed(3) ?? 'N/A'}. It's flying over: ${iss.locationName ?? 'Unknown area'}.`;
+  }
+  
+  if (text.includes('speed') || text.includes('fast') || text.includes('velocity')) {
+    return `The ISS is orbiting the Earth at approximately ${iss.speedKmh ? iss.speedKmh.toFixed(2) + ' km/h' : 'calculating speed...'}.`;
+  }
+  
+  if (text.includes('news') || text.includes('headline') || text.includes('happening')) {
+    if (!newsSum) return "I don't have any news headlines loaded at the moment. Please wait a second or check your connection.";
+    return `Here are the top headlines for ${window.__newsData?.category || 'general'} news:\n${newsSum}`;
+  }
+  
+  if (text.includes('help') || text.includes('what') || text.includes('can') || text.includes('purpose')) {
+    return "I'm your Dashboard Assistant. You can ask me about the ISS's current location, its orbital speed, or the latest news headlines shown on the dashboard.";
+  }
+
+  // Default fallback if no keywords match but API is down
+  return "API TOKEN LIMIT REACHED ";
+}
+
 // ── Send message ───────────────────────────────────────────
 async function sendMessage(text) {
   if (!text.trim() || isTyping) return;
@@ -124,9 +156,13 @@ async function sendMessage(text) {
   try {
     const reply = await callHF(text.trim());
     messages.push({ role: 'bot', text: reply });
+    updateStatus('chat', 'online');
   } catch (err) {
-    messages.push({ role: 'bot', text: `⚠ ${err.message}` });
-    showToast(err.message, 'error');
+    console.warn('Chatbot API error, using fallback:', err.message);
+    const fallback = getFallbackResponse(text.trim());
+    messages.push({ role: 'bot', text: fallback });
+    showToast('AI Offline: Using local fallback', 'info', 2000);
+    updateStatus('chat', 'fallback');
   }
 
   setTyping(false);
