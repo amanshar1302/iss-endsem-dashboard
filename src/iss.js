@@ -101,6 +101,8 @@ export async function fetchPeopleInSpace() {
         .map(p => `<span class="person-tag">${p.name}</span>`)
         .join('');
     }
+    // Expose for chatbot
+    window.__peopleData = data;
   } catch {
     const countEl = document.getElementById('people-count');
     if (countEl) countEl.textContent = '?';

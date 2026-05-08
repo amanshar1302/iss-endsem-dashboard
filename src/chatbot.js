@@ -124,25 +124,49 @@ function getFallbackResponse(userText) {
   const iss = window.__issData || {};
   const newsSum = getNewsSummary();
 
+  if (text === 'hi' || text === 'hello' || text === 'hey') {
+    return "Hello! I'm your Mission Control assistant. I can help you with ISS tracking data, orbital speed, or the latest news headlines. What would you like to know?";
+  }
+
   if (text.includes('where') || text.includes('location') || text.includes('position') || text.includes('coord')) {
-    return `The International Space Station is currently at Latitude ${iss.lat?.toFixed(3) ?? 'N/A'} and Longitude ${iss.lon?.toFixed(3) ?? 'N/A'}. It's flying over: ${iss.locationName ?? 'Unknown area'}.`;
+    return `The International Space Station is currently at Latitude ${iss.lat?.toFixed(3) ?? 'N/A'} and Longitude ${iss.lon?.toFixed(3) ?? 'N/A'}. It's currently flying over: ${iss.locationName ?? 'Unknown area'}.`;
   }
   
   if (text.includes('speed') || text.includes('fast') || text.includes('velocity')) {
-    return `The ISS is orbiting the Earth at approximately ${iss.speedKmh ? iss.speedKmh.toFixed(2) + ' km/h' : 'calculating speed...'}.`;
+    return `The ISS is orbiting the Earth at a speed of approximately ${iss.speedKmh ? iss.speedKmh.toFixed(2) + ' km/h' : 'calculating speed...'}.`;
   }
   
   if (text.includes('news') || text.includes('headline') || text.includes('happening')) {
-    if (!newsSum) return "I don't have any news headlines loaded at the moment. Please wait a second or check your connection.";
+    if (!newsSum) return "I don't have any news headlines loaded at the moment. Please wait a second for the feed to refresh.";
     return `Here are the top headlines for ${window.__newsData?.category || 'general'} news:\n${newsSum}`;
   }
-  
-  if (text.includes('help') || text.includes('what') || text.includes('can') || text.includes('purpose')) {
-    return "I'm your Dashboard Assistant. You can ask me about the ISS's current location, its orbital speed, or the latest news headlines shown on the dashboard.";
+
+  if (text.includes('thank')) {
+    return "You're very welcome! Is there anything else I can help you find on the dashboard?";
   }
 
-  // Default fallback if no keywords match but API is down
-  return "API TOKEN LIMIT REACHED ";
+  if (text.includes('how are you')) {
+    return "I'm operating at peak efficiency! Ready to provide you with real-time ISS and news intelligence. How about you?";
+  }
+
+  if (text.includes('astronaut') || text.includes('people') || text.includes('who is in space')) {
+    const people = window.__peopleData;
+    if (people && people.number) {
+      return `There are currently ${people.number} people in space. Some of them include: ${people.people.slice(0, 3).map(p => p.name).join(', ')}... You can see the full list on the dashboard!`;
+    }
+    return "I'm not sure exactly how many people are in space right now, but you can check the 'People in Space' section on the dashboard for the latest count.";
+  }
+
+  if (text.includes('time') || text.includes('updated')) {
+    return `The latest ISS data was received at ${iss.timestamp || 'N/A'}. The dashboard polls for updates every 15 seconds.`;
+  }
+  
+  if (text.includes('help') || text.includes('what') || text.includes('can') || text.includes('purpose') || text.includes('who are you')) {
+    return "I am the Mission Control AI Assistant. I specialize in interpreting the data on this dashboard, including ISS tracking, orbital metrics, and global news feeds. Try asking: 'Where is the ISS?' or 'What's the news?'";
+  }
+
+  // Generic fallback if no keywords match but API is down
+  return "I understand you're asking something specific, but my AI core is currently at its API limit. However, I can still provide any dashboard data (ISS position, speed, or news) if you ask about those!";
 }
 
 // ── Send message ───────────────────────────────────────────
@@ -159,6 +183,10 @@ async function sendMessage(text) {
     updateStatus('chat', 'online');
   } catch (err) {
     console.warn('Chatbot API error, using fallback:', err.message);
+    
+    // Simulate network delay for a more realistic "mock" feel
+    await new Promise(r => setTimeout(r, 600)); 
+
     const fallback = getFallbackResponse(text.trim());
     messages.push({ role: 'bot', text: fallback });
     showToast('AI Offline: Using local fallback', 'info', 2000);
